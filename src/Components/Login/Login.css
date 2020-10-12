@@ -1,0 +1,15 @@
+.cont{
+    height: 50%;
+    width: 35%;
+
+    padding: 20px;
+    border: 1px solid #808080;
+    border-radius: 14px;
+}
+
+.loading{
+    text-align: center;
+    padding-block-end: 20px;
+    font-size: 18px;
+    color: #202020;
+}

@@ -1,26 +1,85 @@
-import React from 'react';
-import logo from './logo.svg';
+import React, { Component } from 'react';
 import './App.css';
 
-function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+import Login from './Components/Login/Login';
+import Home from './Components/Home/Home';
+
+import axios from 'axios';
+
+class App extends Component {
+
+  state = {
+    logged: localStorage.getItem('user') !== null ? true : false
+  }
+
+  componentDidMount() {
+    if (this.state.logged) {
+      this.setRefreshTokenLoop();
+    }
+  }
+
+  loginSuccessHandler = () => {
+    this.setState({
+      logged: true
+    });
+    this.setRefreshTokenLoop(true);
+  }
+
+  setRefreshTokenLoop = async loginMethod => {
+
+    if (!loginMethod) {
+      await this.getNewTokens();
+    }
+
+    setInterval(async () => {
+      await this.getNewTokens();
+    }
+      , 10 * 1000);
+
+  }
+
+  getNewTokens = async () => {
+    try {
+      const user = JSON.parse(localStorage.getItem('user'));
+
+      console.log(user.refreshToken);
+
+      const data = {
+        refreshToken: `Bearer ${user.refreshToken}`
+      }
+
+      const url = "https://friendly-earwig-23.loca.lt/auth/newtokens";
+
+      const reply = await axios.post(url, data,
+        {
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+
+      user.refreshToken = reply.data.refreshToken;
+      user.accessToken = reply.data.accessToken;
+
+      localStorage.setItem('user', JSON.stringify(user));
+
+    } catch (err) {
+      alert('Some error occured. Please refresh the page or try after sometime.');
+      console.log(err);
+    }
+  }
+
+  render() {
+    return (
+      <div className="App" >
+        {
+          this.state.logged ?
+            <Home />
+            :
+            <Login loginSuccess={this.loginSuccessHandler} />
+        }
+      </div>
+    );
+  }
 }
 
 export default App;
