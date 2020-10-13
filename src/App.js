@@ -34,7 +34,7 @@ class App extends Component {
     setInterval(async () => {
       await this.getNewTokens();
     }
-      , 10 * 1000);
+      , 60 * 1000);
 
   }
 
@@ -48,7 +48,7 @@ class App extends Component {
         refreshToken: `Bearer ${user.refreshToken}`
       }
 
-      const url = "https://friendly-earwig-23.loca.lt/auth/newtokens";
+      const url = "https://hot-snail-4.loca.lt/auth/newtokens";
 
       const reply = await axios.post(url, data,
         {
@@ -69,11 +69,20 @@ class App extends Component {
   }
 
   render() {
+    let user = JSON.parse(localStorage.getItem('user'))
+    let name;
+    let username;
+
+    if (this.state.logged) {
+      name = user.name;
+      username = user.username;
+    }
+
     return (
       <div className="App" >
         {
           this.state.logged ?
-            <Home />
+            <Home name={name} username={username} />
             :
             <Login loginSuccess={this.loginSuccessHandler} />
         }

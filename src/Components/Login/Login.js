@@ -2,6 +2,8 @@ import React, { Component } from "react";
 import { Form, Button } from "react-bootstrap";
 import "./Login.css";
 
+import cx from 'classnames';
+
 import axios from 'axios';
 
 class Login extends Component {
@@ -41,7 +43,7 @@ class Login extends Component {
             password: this.state.password
         }
 
-        const url = 'https://friendly-earwig-23.loca.lt/auth/login';
+        const url = 'https://hot-snail-4.loca.lt/auth/login';
 
         this.setState({
             loading: true
@@ -63,10 +65,11 @@ class Login extends Component {
             this.props.loginSuccess();
 
         } catch (err) {
-
+            this.setState({
+                loading: false
+            });
             console.log(err);
             alert("Login failed!");
-
         }
 
         // headers: {
@@ -79,32 +82,37 @@ class Login extends Component {
 
     render() {
         return (
-            <div className="cont">
-                <Form className="loginForm" onSubmit={this.handleSubmit}>
-                    <Form.Group controlId="formBasicEmail">
-                        <Form.Label>Username</Form.Label>
-                        <Form.Control
-                            type="text"
-                            value={this.state.username}
-                            onChange={this.usernameInputHandler}
-                            placeholder="Enter username"
-                        />
-                    </Form.Group>
-                    <Form.Group controlId="formBasicPassword">
-                        <Form.Label>Password</Form.Label>
-                        <Form.Control
-                            type="password"
-                            value={this.state.password}
-                            onChange={this.passwordInputHandler}
-                            placeholder="Password"
-                        />
-                    </Form.Group>
-                    <Button variant="primary" disabled={!(this.state.username.length && this.state.password.length)} type="submit">
-                        Submit
+            <div className="preCont">
+                <div className="cont">
+                    <div style={{ display: this.state.loading ? 'block' : 'none' }} className={"refreshContentContainer"}>
+                        <div className={cx("refreshContentWrap", "refreshContentHrAnimation")}>
+                            <hr className={cx("refreshContentColored")} />
+                            <hr className={cx("refreshContentColored")} />
+                        </div>
+                    </div>
+                    <Form className="loginForm" onSubmit={this.handleSubmit}>
+                        <Form.Group controlId="formBasicEmail">
+                            <Form.Label>Username</Form.Label>
+                            <Form.Control
+                                type="text"
+                                value={this.state.username}
+                                onChange={this.usernameInputHandler}
+                                placeholder="Enter username"
+                            />
+                        </Form.Group>
+                        <Form.Group controlId="formBasicPassword">
+                            <Form.Label>Password</Form.Label>
+                            <Form.Control
+                                type="password"
+                                value={this.state.password}
+                                onChange={this.passwordInputHandler}
+                                placeholder="Password"
+                            />
+                        </Form.Group>
+                        <Button variant="primary" disabled={!(this.state.username.length && this.state.password.length)} type="submit">
+                            Submit
                 </Button>
-                </Form>
-                <div style={{ display: this.state.loading ? 'block' : 'none' }} className="loading">
-                    Loading...
+                    </Form>
                 </div>
             </div>
         );

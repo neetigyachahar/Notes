@@ -1,172 +1,299 @@
-import React, { component } from 'react';
+import React from 'react';
 
-class Model {
-    constructor() {
-        this.notes = []
-    }
+import './Notepad.css';
 
-}
+import cx from 'classnames';
 
-var model = new Model();
+import { Spinner } from 'react-bootstrap';
+
+import axios from 'axios';
+
+import deepCopy from 'deep-clone';
 
 class View extends React.Component {
 
-    constructor() {
-        super();
-        // Set initial state
-        this.state = {
-            inputText: '',
-            color: 'green',
-            alert: ''
-        };
 
+    // Set initial state
+    state = {
+        inputText: '',
+        color: 'green',
+        alert: '',
+        addTextLoading: false,
+        notes: []
+    };
+
+
+    componentDidMount() {
+        this.loadTextsHandler();
+    }
+
+    addNote = newNote => {
+        console.log(this.state);
+
+        newNote.id = Math.floor(Math.random() * 10000000000000) + 1;
+        this.setState(state => {
+            let newState = deepCopy(state);
+            newState.notes.splice(0, 0, { ...newNote });
+            return newState;
+        });
+    }
+
+    deleteNote = id => {
+        let new_notes = this.state.notes.filter(note => note.id !== id);
+        this.setState(state => {
+            let newState = deepCopy(state);
+            newState.notes = new_notes;
+            return newState;
+        });
+    }
+
+    loadTextsHandler = async () => {
+        try {
+
+            const accessToken = JSON.parse(localStorage.getItem('user')).accessToken;
+            if (!accessToken) {
+                throw new Error("Token not found in localStorage");
+            }
+            const token = `Bearer ${accessToken}`;
+
+            const reply = await axios.get('https://hot-snail-4.loca.lt/user/getTexts', {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': token
+                }
+            });
+
+            console.log(reply.data);
+
+            // reply.data.texts.reverse();
+
+            reply.data.texts.forEach(element => {
+                this.addNote({
+                    content: element,
+                    bgColor: this.state.color
+                });
+                console.log('ijnijhijh');
+            });
+
+        } catch (err) {
+            console.log(err);
+        }
     }
 
     render() {
         // Create list of notes
-        let list = model.notes.map(function (note) {
-            if (note.id != null) {
-                return (<div>
-                    <div className={note.bgColor + ' note-box alert col-md-11'}>
-                        {note.content}
-                    </div>
-                    <div className="col-md-1 text-center">
-                        <button className="delete btn btn-default" onClick={this.handleDeleteNote.bind(this, note.id)} >&times;</button>
-                    </div>
-                </div>)
+        console.log(this.state.notes);
+        let list = this.state.notes.map(note => {
+            if (note.id !== null) {
+                return (
+                    <div key={1 + Math.floor(Math.random() * 10000000000000)} className="asdf">
+                        <div className={note.bgColor + ' note-box alert col-md-11'}>
+                            {note.content}
+                        </div>
+                        <div className="col-md-1 text-center">
+                            <button className="delete btn btn-default" onClick={() => this.handleDeleteNote(note.id)} >&times;</button>
+                        </div>
+                    </div>)
+            } else {
+                return null;
             }
-        }, this);
+        });
 
         // Render app content
-        return <div>
-            <div className="panel panel-default">
-                <div className="panel-body">
-                    <form className="form-group">
-                        <label for="note-add">Add New Note</label>
-                        <input
-                            id="note-add"
-                            className="form-control"
-                            type="text"
-                            value={this.state.inputText}
-                            placeholder="Type note here"
-                            onChange={this.handleInputText.bind(this)}
-                        />
-                        <label for="select-color" >Select Color</label>
-                        <div id="select-color">
-                            <input className="color-radio" type="radio" onClick={this.selectGreen.bind(this)} checked={this.state.color == 'green' ? 'checked' : ''} /> Green &nbsp;
-          <input className="color-radio" type="radio" onClick={this.selectRed.bind(this)} checked={this.state.color == 'red' ? 'checked' : ''} /> Red &nbsp;
-          <input className="color-radio" type="radio" onClick={this.selectBlue.bind(this)} checked={this.state.color == 'blue' ? 'checked' : ''} /> Blue &nbsp;
-          <input className="color-radio" type="radio" onClick={this.selectOrange.bind(this)} checked={this.state.color == 'orange' ? 'checked' : ''} /> Orange &nbsp;
-        </div>
-                    </form>
-                    <button className="btn btn-success" onClick={this.handleAddNote.bind(this)} >Add Note</button>
-                    <span className="alerts">{this.state.alert}</span>
+        return (
+            <div className="notepadContainer">
+                <div className="panel panel-default">
+                    <div className="panel-body">
+                        {this.state.addTextLoading ?
+                            <div className={"refreshContentContainer"}>
+                                <div className={cx("refreshContentWrap", "refreshContentHrAnimation")}>
+                                    <hr className={cx("refreshContentColored")} />
+                                    <hr className={cx("refreshContentColored")} />
+                                </div>
+                            </div>
+                            : null}
+                        <form className="form-group zxcv">
+                            <label htmlFor="note-add">Add New Note</label>
+                            <input
+                                id="note-add"
+                                className="form-control"
+                                type="text"
+                                value={this.state.inputText}
+                                placeholder="Type note here"
+                                onChange={this.handleInputText}
+                            />
+                            <label htmlFor="select-color" >Select Color</label>
+                            <div id="select-color">
+                                <input className="color-radio" type="radio" onClick={this.selectGreen} checked={this.state.color === 'green' ? 'checked' : ''} /> Green &nbsp;
+                                <input className="color-radio" type="radio" onClick={this.selectRed} checked={this.state.color === 'red' ? 'checked' : ''} /> Red &nbsp;
+                                <input className="color-radio" type="radio" onClick={this.selectBlue} checked={this.state.color === 'blue' ? 'checked' : ''} /> Blue &nbsp;
+                                <input className="color-radio" type="radio" onClick={this.selectOrange} checked={this.state.color === 'orange' ? 'checked' : ''} /> Orange &nbsp;
+                            </div>
+                        </form>
+                        <button className="btn btn-success" onClick={this.handleAddNote} >Add Note</button>
+                        <span className="alerts">{this.state.alert}</span>
+                    </div>
+                </div>
+                <div className="notesCon">
+                    <h3 className="text-center">Notes</h3>
+                    <hr style={{ margin: 0 }} />
+                    <div className="listData">
+                        {this.state.notes.length === 0 ? <Spinner animation="grow" variant="dark" /> : list}
+                    </div>
                 </div>
             </div>
-            <h3 className="text-center">Notes</h3>
-            <hr />
-            <div>
-                {model.notes.length === 0 ? <h3>No Notes</h3> : list}
-            </div>
-        </div>
+        )
     }
 
     // Update state of input text
-    handleInputText(e) {
-        this.setState({ inputText: e.target.value })
+    handleInputText = e => {
+        const val = e.target.value;
+        this.setState(state => {
+            let newState = deepCopy(state);
+            newState.inputText = val;
+            return newState;
+        });
     }
 
     // Add new note
-    handleAddNote() {
+    handleAddNote = async () => {
 
         // Add note if input is not blank
-        if (this.state.inputText != '') {
-            controller.addNote({
-                content: this.state.inputText,
-                bgColor: this.state.color
+        if (this.state.inputText !== '') {
+            this.setState(state => {
+                let newState = deepCopy(state);
+                newState.addTextLoading = true;
+                return newState;
             });
-        }
 
-        // Update component state
-        this.setState({
-            inputText: ''
-        });
+            try {
 
-        // Show note successfully added alert
-        if (this.state.inputText != '') {
-            // Show success alert message
-            this.showAddAlert();
+
+                const data = {
+                    "newText": this.state.inputText
+                }
+
+                const accessToken = JSON.parse(localStorage.getItem('user')).accessToken;
+                if (!accessToken) {
+                    throw new Error("Token not found in localStorage");
+                }
+                const token = `Bearer ${accessToken}`;
+
+                console.log("asdf", token);
+
+                const reply = await axios.post('https://hot-snail-4.loca.lt/user/addTexts', data, {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': token
+                    }
+                });
+
+                this.addNote({
+                    content: this.state.inputText,
+                    bgColor: this.state.color
+                });
+
+                if (this.state.inputText !== '') {
+                    // Show success alert message
+                    this.showAddAlert();
+                }
+
+                this.setState(state => {
+                    let newState = deepCopy(state);
+                    newState.addTextLoading = false;
+                    newState.inputText = '';
+                    return newState;
+                });
+
+
+
+            } catch (err) {
+                this.setState(state => {
+                    let newState = deepCopy(state);
+                    newState.addTextLoading = false;
+                    return newState;
+                });
+                console.log(err);
+            }
+
         }
 
     }
 
     // Delete a note
-    handleDeleteNote(id) {
+    handleDeleteNote = id => {
 
-        controller.deleteNote(id);
+        this.deleteNote(id);
 
         this.showDeleteAlert();
 
     }
 
-    showAddAlert() {
-        this.setState({ alert: 'Note Added!' })
+    showAddAlert = () => {
+        this.setState(state => {
+            let newState = deepCopy(state);
+            newState.alert = 'Note Added!';
+            return newState;
+        });
 
-        let hideAlert = setTimeout(this.hideAlert.bind(this), 1000);
+        let hideAlert = setTimeout(this.hideAlert, 1000);
     }
 
-    showDeleteAlert() {
-        this.setState({ alert: 'Note Deleted!' })
+    showDeleteAlert = () => {
+        this.setState(state => {
+            let newState = deepCopy(state);
+            newState.alert = 'Note Deleted!';
+            return newState;
+        });
 
-        let hideAlert = setTimeout(this.hideAlert.bind(this), 1000);
+        let hideAlert = setTimeout(this.hideAlert, 1000);
     }
 
-    hideAlert() {
-        this.setState({ alert: '' })
+    hideAlert = () => {
+        this.setState(state => {
+            let newState = deepCopy(state);
+            newState.alert = '';
+            return newState;
+        });
     }
 
     // Set new note background color to green - default
-    selectGreen() {
-        this.setState({ color: 'green' })
+    selectGreen = () => {
+        this.setState(state => {
+            let newState = deepCopy(state);
+            newState.color = 'green';
+            return newState;
+        });
     }
 
     // Set new note background color to red
-    selectRed() {
-        this.setState({ color: 'red' })
+    selectRed = () => {
+        this.setState(state => {
+            let newState = deepCopy(state);
+            newState.color = 'red';
+            return newState;
+        });
     }
 
     // Set new note background color to blue
-    selectBlue() {
-        this.setState({ color: 'blue' })
+    selectBlue = () => {
+        this.setState(state => {
+            let newState = deepCopy(state);
+            newState.color = 'blue';
+            return newState;
+        });
     }
 
     // Set new note background color to orange
-    selectOrange() {
-        this.setState({ color: 'orange' })
+    selectOrange = () => {
+        this.setState(state => {
+            let newState = deepCopy(state);
+            newState.color = 'orange';
+            return newState;
+        });
     }
 
 }
 
-
-class Controller {
-    addNote(newNote) {
-        newNote.id = (model.notes.length + 1);
-        model.notes.push(newNote);
-    }
-
-    deleteNote(id) {
-        let new_notes = [];
-        for (let i = 0; i < model.notes.length; i++) {
-            if (model.notes[i]['id'] == id) {
-                // do nothing
-            } else {
-                new_notes.push(model.notes[i]);
-            }
-        }
-        model.notes = new_notes;
-    }
-}
-
-var controller = new Controller();
 
 export default View;
